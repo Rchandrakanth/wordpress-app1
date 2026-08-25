@@ -3,38 +3,38 @@
   hosts: deploymentserver
   become: yes
 
-  
   vars:
     app_directory: /opt/wordpress
- 
+
   tasks:
     - name: install teh dependencies for docker
       ansible.builtin.apt:
-        name: 
+        name:
           - ca-certificates
-          - curl 
+          - curl
           - gnupg
           - awscli
-    
+        update_cache: yes
+
     - name: creating the docker key rings
       ansible.builtin.file:
         path: /etc/apt/keyrings
-        state: directory 
-        mode: '0755'
+        state: directory
+        mode: "0755"
 
-    - name: downloading the docker gpg key 
+    - name: downloading the docker gpg key
       ansible.builtin.get_url:
-        url:  https://download.docker.com/linux/ubuntu/gpg
+        url: https://download.docker.com/linux/ubuntu/gpg
         dest: /etc/apt/keyrings/docker.asc
 
     - name: adding docker repsitory
       ansible.builtin.apt_repository:
         repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
-      
+
     - name: installing the docker and docker compose plugins
       ansible.builtin.apt:
-        name: 
+        name:
           - docker-ce
           - docker-ce-cli
           - containerd.io
@@ -45,17 +45,13 @@
 
     - name: starting and enabling the docker
       ansible.builtin.service:
-        name: docker 
+        name: docker
         state: started
         enabled: yes
-    
+
     - name: creating application directory
       ansible.builtin.file:
         path: "{{ app_directory }}"
         state: directory
         owner: ubuntu
         group: ubuntu
-      
-    
-
-
