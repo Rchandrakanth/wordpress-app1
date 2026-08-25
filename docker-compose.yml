@@ -1,0 +1,41 @@
+services:
+
+  mysql:
+    image: ${ECR_REGISTRY}/fournine-mysql:${IMAGE_TAG}
+    container_name: mysql-db
+    restart: always
+
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+
+  wordpress:
+    image: ${ECR_REGISTRY}/fournine-wordpress:${IMAGE_TAG}
+    container_name: wordpress-app
+    restart: always
+
+    depends_on:
+      - mysql
+
+    environment:
+      WORDPRESS_DB_HOST: mysql:3306
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+
+    ports:
+      - "8082:80"
+
+    volumes:
+      - wordpress_data:/var/www/html
+
+
+volumes:
+  mysql_data:
+  wordpress_data:

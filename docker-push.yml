@@ -1,0 +1,53 @@
+---
+- name: building the docker image and pushing the image to ecr
+  hosts: localhost
+  connection: local
+  become: yes
+
+  vars:
+    region: ap-south-1
+    ECR_REGISTRY: "334624056997.dkr.ecr.ap-south-1.amazonaws.com"
+    wordpress_image: "fournine-wordpress"
+    mysql_image: "fournine-mysql"
+    IMAGE_TAG: "{{ lookup('env', 'BUILD_NUMBER') }}"
+ 
+  tasks:
+
+  - name: login authenticate to ecr
+    ansible.builtin.shell:
+      cmd: aws ecr get-login-password --region "{{ region }}" | docker login --username AWS --password-stdin "{{ ECR_REGISTRY }}"
+
+  - name:  building wordpress image
+    ansible.builtin.command:
+      cmd: docker build -t  "{{ wordpress_image }}:{{ IMAGE_TAG  }}" ./wordpress
+
+  - name: building the mysql image
+    ansible.builtin.command:
+      cmd:  docker build -t "{{ mysql_image }}:{{ IMAGE_TAG }}" ./database
+
+  - name: taging the wordpress image to ecr
+    anisble.builtin.command:  
+      cmd: docker tag "{{ wordpress_image }}:{{ IMAGE_TAG  }}" "{{ ECR_REGISTRY }}/{{ wordpress_image }}:{{ IMAGE_TAG }}" 
+
+  - name: tagging the mysql database image to ecr
+    ansible.builtin.command:
+      cmd: docker tag "{{ mysql_image }}:{{ IMAGE_TAG  }}" "{{ ECR_REGISTRY }}/{{ mysql_image }}:{{ IMAGE_TAG }}" 
+  
+  - name: pushing the wordpress image to ecr
+    ansible.builtin.command:
+      cmd:  
+        - docker push "{{ ECR_REGISTRY }}/{{ wordpress_image }}:{{ IMAGE_TAG }}"
+
+  - name: pushing the mysql image to ecr
+    ansible.builtin.command:
+      cmd:  
+        - docker push "{{ ECR_REGISTRY }}/{{ mysql_image }}:{{ IMAGE_TAG }}"
+
+
+      
+  
+
+
+
+
+
