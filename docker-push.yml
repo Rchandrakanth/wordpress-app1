@@ -2,7 +2,6 @@
 - name: building the docker image and pushing the image to ecr
   hosts: localhost
   connection: local
-  become: yes
 
   vars:
     region: ap-south-1
@@ -34,10 +33,8 @@
 
     - name: pushing the wordpress image to ecr
       ansible.builtin.command:
-        cmd:
-          - docker push "{{ ECR_REGISTRY }}/{{ wordpress_image }}:{{ IMAGE_TAG }}"
+        cmd: docker push "{{ ECR_REGISTRY }}/{{ wordpress_image }}:{{ IMAGE_TAG }}"
 
     - name: pushing the mysql image to ecr
       ansible.builtin.command:
-        cmd:
-          - docker push "{{ ECR_REGISTRY }}/{{ mysql_image }}:{{ IMAGE_TAG }}"
+        cmd: docker push "{{ ECR_REGISTRY }}/{{ mysql_image }}:{{ IMAGE_TAG }}"
