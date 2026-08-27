@@ -19,7 +19,7 @@
 
     - name: Get MySQL credentials
       ansible.builtin.set_fact:
-        mysql_secret: "{{ lookup('amazon.aws.aws_secret', secret_name, region=region) }}"
+        mysql_secret: "{{ lookup('amazon.aws.aws_secret', secret_name, region=region) | from_json }}"
       no_log: true
 
     - name: Create environment file
@@ -48,7 +48,6 @@
         src: docker-compose.yml
         dest: "{{ app_directory }}/docker-compose.yml"
         mode: "0644"
-        
 
     - name: running the wordpress and mysql contianers using docker compose
       ansible.builtin.command:

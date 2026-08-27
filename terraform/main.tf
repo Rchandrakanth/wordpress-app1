@@ -1,6 +1,7 @@
 
 
 resource "aws_instance" "myinstance1" {
+  count=1
   ami           = var.ami_id
   instance_type = var.instance_type
   #   availability_zone           = var.public_availability_zone
