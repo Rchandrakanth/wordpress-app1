@@ -1,0 +1,56 @@
+---
+- name: pulling the docker images from the ecr and use the environment variables from the secrets
+  hosts: deploymentserver
+  become: yes
+
+  vars:
+    app_directory: /opt/wordpress
+    region: ap-south-1
+    ecr_registry: "334624056997.dkr.ecr.ap-south-1.amazonaws.com"
+    wordpress_image: fournine-wordpress
+    mysql_image: fournine-mysql
+    image_tag: "{{ lookup('env', 'BUILD_NUMBER') }}"
+    secret_name: "wordpress/mysql"
+
+  tasks:
+    - name: login authenticate to ecr
+      ansible.builtin.shell:
+        cmd: aws ecr get-login-password --region "{{ region }}" | docker login --username AWS --password-stdin "{{ ecr_registry }}"
+
+    - name: Get MySQL credentials
+      ansible.builtin.set_fact:
+        mysql_secret: "{{ lookup('amazon.aws.aws_secret', secret_name, region=region) }}"
+      no_log: true
+
+    - name: Create environment file
+      ansible.builtin.copy:
+        dest: "{{ app_directory }}/.env"
+        mode: "0600"
+        content: |
+          ECR_REGISTRY={{ ecr_registry }}
+          IMAGE_TAG={{ image_tag }}
+          MYSQL_DATABASE={{ mysql_secret.MYSQL_DATABASE }}
+          MYSQL_USER={{ mysql_secret.MYSQL_USER }}
+          MYSQL_PASSWORD={{ mysql_secret.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD={{ mysql_secret.MYSQL_ROOT_PASSWORD }}
+      no_log: true
+
+    - name: pulling the wordpress image from ecr
+      ansible.builtin.command:
+        cmd: docker pull "{{ ecr_registry }}/{{ wordpress_image }}:{{ image_tag }}"
+
+    - name: pulling the mysql image from ecr
+      ansible.builtin.command:
+        cmd: docker pull "{{ ecr_registry }}/{{ mysql_image }}:{{ image_tag }}"
+
+    - name: copy docker compose file
+      ansible.builtin.copy:
+        src: docker-compose.yml
+        dest: "{{ app_directory }}/docker-compose.yml"
+        mode: "0644"
+        
+
+    - name: running the wordpress and mysql contianers using docker compose
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ app_directory }}"
