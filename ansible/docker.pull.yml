@@ -45,7 +45,7 @@
 
     - name: copy docker compose file
       ansible.builtin.copy:
-        src: docker-compose.yml
+        src: ../docker-compose.yml
         dest: "{{ app_directory }}/docker-compose.yml"
         mode: "0644"
 
